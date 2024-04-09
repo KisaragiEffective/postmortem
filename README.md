@@ -47,5 +47,23 @@
 
 対策として、[単体テストの追加](https://github.com/KisaragiEffective/origlang/pull/290/files#diff-2db0347bcbc239369aaa80eaca96922d14f91cf3bd414335e99d028e7e9b31ee)及び[CIによるClippyの強制](https://github.com/KisaragiEffective/origlang/pull/293)を行った。
 
+## findコマンドで無限ループを招いた罪
+
+```sh
+find . -type d -exec mkdir -p ./Hoge/{} \;
+```
+
+このコマンドを使うと、おそらく以下のような作用機序で無限ループを招いて死ぬ。
+
+1. Piyoフォルダの下にHogeを作る
+2. Piyo/Hogeは探索されていないので、Piyo/Hogeの下にHogeを作る
+3. Piyo/Hoge/Hogeは……(以下、無限ループ)
+
+対策として、一旦パイプに逃がすことで解決した。
+
+```sh
+find . -type d -print0 | xargs -0 -I {} mkdir -p "./Hoge/{}"
+```
+
 [^3]: Rustの`str`は常にUTF-8であることが保証されており、`&mut [u8]`などで可変借用した結果その不変条件が破れていた場合は未定義動作となる。
 [^4]: 例えば、Rubyは`"0".."9"`とすると`"9"`を含む。
